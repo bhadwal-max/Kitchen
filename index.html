@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Teena's Kitchen">
+  <title>Teena's Kitchen Orders</title>
+  <style>
+    :root {
+      --green: #2d6a4f;
+      --green-light: #40916c;
+      --green-dark: #1b4332;
+      --gold: #d4a373;
+      --cream: #fefae0;
+      --bg: #f8f5f0;
+      --card: #ffffff;
+      --text: #1a1a1a;
+      --muted: #666;
+      --danger: #c1121f;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 90px;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--green-dark), var(--green));
+      color: white;
+      padding: 16px 20px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+
+    header h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    header p {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+      font-size: 0.8rem;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.15);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    /* Main content */
+    main {
+      padding: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--muted);
+    }
+
+    .tab.active {
+      background: var(--green);
+      color: white;
+    }
+
+    /* Order cards */
+    .order-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      border-left: 5px solid var(--green);
+      position: relative;
+    }
+
+    .order-card.status-new { border-left-color: #457b9d; }
+    .order-card.status-confirmed { border-left-color: #2a9d8f; }
+    .order-card.status-preparing { border-left-color: #e9c46a; }
+    .order-card.status-ready { border-left-color: #f4a261; }
+    .order-card.status-delivered { border-left-color: #2d6a4f; opacity: 0.75; }
+
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .order-name {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .order-time {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .order-details {
+      font-size: 0.95rem;
+      margin: 6px 0;
+      line-height: 1.4;
+    }
+
+    .order-meta {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: white;
+      margin-top: 8px;
+    }
+
+    .status-new { background: #457b9d; }
+    .status-confirmed { background: #2a9d8f; }
+    .status-preparing { background: #e9c46a; color: #333; }
+    .status-ready { background: #f4a261; }
+    .status-delivered { background: #2d6a4f; }
+
+    .status-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .status-btn {
+      flex: 1;
+      min-width: 70px;
+      padding: 8px 6px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .status-btn:active {
+      transform: scale(0.96);
+    }
+
+    .status-btn.active {
+      background: var(--green);
+      color: white;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn-edit, .btn-delete {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-edit {
+      background: #e9ecef;
+      color: #333;
+    }
+
+    .btn-delete {
+      background: #ffe5e5;
+      color: var(--danger);
+    }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+    }
+
+    /* Floating Add Button */
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), var(--green-light));
+      color: white;
+      border: none;
+      font-size: 2rem;
+      box-shadow: 0 6px 20px rgba(45,106,79,0.4);
+      cursor: pointer;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .fab:active {
+      transform: scale(0.92);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: white;
+      width: 100%;
+      max-width: 500px;
+      border-radius: 20px 20px 0 0;
+      padding: 24px 20px 40px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal h2 {
+      font-size: 1.25rem;
+      margin-bottom: 16px;
+      color: var(--green-dark);
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #444;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #ddd;
+      border-radius: 10px;
+      font-size: 1rem;
+      background: #fafafa;
+      -webkit-appearance: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--green);
+      background: white;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #e9ecef;
+      color: #333;
+    }
+
+    .btn:active {
+      opacity: 0.9;
+    }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .filter-chip {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: white;
+      border: 1.5px solid #ddd;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .filter-chip.active {
+      background: var(--green);
+      color: white;
+      border-color: var(--green);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--green-dark);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      z-index: 300;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1b4332">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+  <header>
+    <h1>Teena's Kitchen</h1>
+    <p>Order Tracker</p>
+    <div class="header-stats">
+      <div class="stat" id="stat-today">Today: 0</div>
+      <div class="stat" id="stat-pending">Pending: 0</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="filter-bar" id="filterBar">
+      <div class="filter-chip active" data-filter="all">All</div>
+      <div class="filter-chip" data-filter="new">New</div>
+      <div class="filter-chip" data-filter="confirmed">Confirmed</div>
+      <div class="filter-chip" data-filter="preparing">Preparing</div>
+      <div class="filter-chip" data-filter="ready">Ready</div>
+      <div class="filter-chip" data-filter="delivered">Delivered</div>
+    </div>
+
+    <div id="ordersList"></div>
+  </main>
+
+  <button class="fab" id="addBtn" title="Add Order">+</button>
+
+  <!-- Add / Edit Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <h2 id="modalTitle">New Order</h2>
+      <form id="orderForm">
+        <input type="hidden" id="orderId">
+
+        <div class="form-group">
+          <label>Customer Name *</label>
+          <input type="text" id="customerName" required placeholder="e.g. Rahul Sharma" autocomplete="name">
+        </div>
+
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="phone" placeholder="98765 43210" inputmode="tel">
+        </div>
+
+        <div class="form-group">
+          <label>Order Items *</label>
+          <input type="text" id="items" required placeholder="Sarson Ka Saag + Lachha Paratha" value="Sarson Ka Saag + Lachha Paratha">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" id="qty" min="1" value="1" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label>Amount (₹)</label>
+            <input type="number" id="amount" min="0" value="250" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Type</label>
+          <select id="orderType">
+            <option value="Pickup">Pickup</option>
+            <option value="Delivery">Delivery</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Preferred Time</label>
+          <input type="text" id="prefTime" placeholder="e.g. 7:30 PM">
+        </div>
+
+        <div class="form-group">
+          <label>Notes / Address</label>
+          <textarea id="notes" rows="2" placeholder="Any special request or delivery address"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Payment Status</label>
+          <select id="payment">
+            <option value="Pending">Pending</option>
+            <option value="Paid">Paid (UPI)</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveBtn">Save Order</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ========== Data Layer ==========
+    const STORAGE_KEY = 'teenas_kitchen_orders_v1';
+
+    function loadOrders() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveOrders(orders) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+    }
+
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    }
+
+    function todayStr() {
+      const d = new Date();
+      return d.toISOString().slice(0, 10);
+    }
+
+    // ========== State ==========
+    let orders = loadOrders();
+    let currentFilter = 'all';
+    let editingId = null;
+
+    // ========== UI Helpers ==========
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function formatTime(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function updateStats() {
+      const today = todayStr();
+      const todayOrders = orders.filter(o => o.date === today);
+      const pending = todayOrders.filter(o => o.status !== 'delivered').length;
+      document.getElementById('stat-today').textContent = `Today: ${todayOrders.length}`;
+      document.getElementById('stat-pending').textContent = `Pending: ${pending}`;
+    }
+
+    // ========== Render ==========
+    function renderOrders() {
+      const list = document.getElementById('ordersList');
+      const today = todayStr();
+
+      let filtered = orders.filter(o => o.date === today);
+
+      if (currentFilter !== 'all') {
+        filtered = filtered.filter(o => o.status === currentFilter);
+      }
+
+      // Sort: newest first, delivered at bottom
+      filtered.sort((a, b) => {
+        if (a.status === 'delivered' && b.status !== 'delivered') return 1;
+        if (b.status === 'delivered' && a.status !== 'delivered') return -1;
+        return new Date(b.created) - new Date(a.created);
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">🍲</div>
+            <p>No orders yet today</p>
+            <p style="font-size:0.85rem;margin-top:6px;">Tap + to add your first order</p>
+          </div>
+        `;
+        updateStats();
+        return;
+      }
+
+      list.innerHTML = filtered.map(order => {
+        const statusClass = `status-${order.status}`;
+        return `
+          <div class="order-card ${statusClass}">
+            <div class="order-header">
+              <div class="order-name">${escapeHtml(order.name)}</div>
+              <div class="order-time">${formatTime(order.created)}</div>
+            </div>
+            <div class="order-details">
+              <strong>${escapeHtml(order.items)}</strong> × ${order.qty}
+              <br>₹${order.amount} • ${order.type}
+              ${order.prefTime ? ` • ${escapeHtml(order.prefTime)}` : ''}
+            </div>
+            ${order.phone ? `<div class="order-meta">📞 ${escapeHtml(order.phone)}</div>` : ''}
+            ${order.notes ? `<div class="order-meta">📝 ${escapeHtml(order.notes)}</div>` : ''}
+            <div class="order-meta">Payment: <strong>${order.payment}</strong></div>
+            <span class="status-badge ${statusClass}">${capitalize(order.status)}</span>
+
+            <div class="status-actions">
+              <button class="status-btn ${order.status==='new'?'active':''}" onclick="setStatus('${order.id}','new')">New</button>
+              <button class="status-btn ${order.status==='confirmed'?'active':''}" onclick="setStatus('${order.id}','confirmed')">Confirmed</button>
+              <button class="status-btn ${order.status==='preparing'?'active':''}" onclick="setStatus('${order.id}','preparing')">Preparing</button>
+              <button class="status-btn ${order.status==='ready'?'active':''}" onclick="setStatus('${order.id}','ready')">Ready</button>
+              <button class="status-btn ${order.status==='delivered'?'active':''}" onclick="setStatus('${order.id}','delivered')">Delivered</button>
+            </div>
+
+            <div class="card-actions">
+              <button class="btn-edit" onclick="editOrder('${order.id}')">Edit</button>
+              <button class="btn-delete" onclick="deleteOrder('${order.id}')">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      updateStats();
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function capitalize(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    // ========== Actions ==========
+    function setStatus(id, status) {
+      const order = orders.find(o => o.id === id);
+      if (order) {
+        order.status = status;
+        saveOrders(orders);
+        renderOrders();
+        showToast(`Status → ${capitalize(status)}`);
+      }
+    }
+
+    function deleteOrder(id) {
+      if (!confirm('Delete this order?')) return;
+      orders = orders.filter(o => o.id !== id);
+      saveOrders(orders);
+      renderOrders();
+      showToast('Order deleted');
+    }
+
+    function editOrder(id) {
+      const order = orders.find(o => o.id === id);
+      if (!order) return;
+
+      editingId = id;
+      document.getElementById('modalTitle').textContent = 'Edit Order';
+      document.getElementById('orderId').value = order.id;
+      document.getElementById('customerName').value = order.name;
+      document.getElementById('phone').value = order.phone || '';
+      document.getElementById('items').value = order.items;
+      document.getElementById('qty').value = order.qty;
+      document.getElementById('amount').value = order.amount;
+      document.getElementById('orderType').value = order.type;
+      document.getElementById('prefTime').value = order.prefTime || '';
+      document.getElementById('notes').value = order.notes || '';
+      document.getElementById('payment').value = order.payment;
+
+      document.getElementById('modal').classList.add('show');
+    }
+
+    function openAddModal() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = 'New Order';
+      document.getElementById('orderForm').reset();
+      document.getElementById('items').value = 'Sarson Ka Saag + Lachha Paratha';
+      document.getElementById('qty').value = 1;
+      document.getElementById('amount').value = 250;
+      document.getElementById('orderType').value = 'Pickup';
+      document.getElementById('payment').value = 'Pending';
+      document.getElementById('modal').classList.add('show');
+      setTimeout(() => document.getElementById('customerName').focus(), 300);
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('show');
+    }
+
+    // ========== Form Submit ==========
+    document.getElementById('orderForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const data = {
+        name: document.getElementById('customerName').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        items: document.getElementById('items').value.trim(),
+        qty: parseInt(document.getElementById('qty').value) || 1,
+        amount: parseInt(document.getElementById('amount').value) || 0,
+        type: document.getElementById('orderType').value,
+        prefTime: document.getElementById('prefTime').value.trim(),
+        notes: document.getElementById('notes').value.trim(),
+        payment: document.getElementById('payment').value,
+      };
+
+      if (!data.name || !data.items) {
+        alert('Name and Items are required');
+        return;
+      }
+
+      if (editingId) {
+        // Update
+        const order = orders.find(o => o.id === editingId);
+        if (order) {
+          Object.assign(order, data);
+          showToast('Order updated');
+        }
+      } else {
+        // New
+        const newOrder = {
+          id: generateId(),
+          ...data,
+          status: 'new',
+          date: todayStr(),
+          created: new Date().toISOString()
+        };
+        orders.unshift(newOrder);
+        showToast('Order added ✓');
+      }
+
+      saveOrders(orders);
+      closeModal();
+      renderOrders();
+    });
+
+    // ========== Event Listeners ==========
+    document.getElementById('addBtn').addEventListener('click', openAddModal);
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+
+    // Close modal on overlay click
+    document.getElementById('modal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    // Filter chips
+    document.getElementById('filterBar').addEventListener('click', function(e) {
+      if (e.target.classList.contains('filter-chip')) {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        e.target.classList.add('active');
+        currentFilter = e.target.dataset.filter;
+        renderOrders();
+      }
+    });
+
+    // Initial render
+    renderOrders();
+
+    // Clean old orders older than 7 days (optional housekeeping)
+    (function cleanOld() {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const cutoff = weekAgo.toISOString().slice(0, 10);
+      const before = orders.length;
+      orders = orders.filter(o => o.date >= cutoff);
+      if (orders.length !== before) saveOrders(orders);
+    })();
+  </script>
+<script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(console.error));
+    }
+  </script>
+</body>
+</html>

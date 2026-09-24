@@ -1,0 +1,14 @@
+{
+  "name": "Teena's Kitchen Orders",
+  "short_name": "Teena's Kitchen",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8f5f0",
+  "theme_color": "#1b4332",
+  "description": "Order tracker for Teena's Kitchen",
+  "icons": [
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
